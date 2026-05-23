@@ -1,6 +1,7 @@
 DROP table orders;
 
 DROP TABLE orders;
+--^had an issue creating orders 2 times
 
 CREATE TABLE orders (
     row_id INT,
@@ -25,6 +26,7 @@ CREATE TABLE orders (
     discount DECIMAL(5,2),
     profit DECIMAL(10,2)
 );
+--^recreated
 
 COPY orders
 FROM 'C:\superstore.csv'
@@ -40,14 +42,32 @@ SELECT region, SUM(profit) AS total_profit from orders
 GROUP BY region
 ORDER BY SUM(profit) DESC;
 
---What's the slowest shipment ever recorded?
-
-SELECT order_id, customer_name, ship_date, order_date, (ship_date - order_date) AS days_to_ship
-FROM orders
-ORDER BY days_to_ship DESC
-Limit 1;
-
 --Which region discounts the most but profits the least?
+
+SELECT state,
+       CONCAT(ROUND(SUM(profit),0), '$') AS total_profit,
+CASE WHEN SUM(profit) < 0 THEN 'charity_case' ELSE 'pulling its weight' END AS verdict
+    FROM orders
+GROUP BY state
+ORDER BY SUM(profit) ASC;
+
+--Which month is cursed?
+
+SELECT SUM(profit) AS total_profit, TO_CHAR(order_date,'Month') AS month
+FROM orders
+GROUP BY TO_CHAR(order_date,'Month')
+ORDER BY total_profit ASC;
+
+--Which state do we basically donate to?
+
+SELECT state,
+       CONCAT(ROUND(SUM(profit),0), '$') AS total_profit,
+CASE WHEN SUM(profit) < 0 THEN 'charity_case' ELSE 'pulling its weight' END AS verdict
+    FROM orders
+GROUP BY state
+ORDER BY SUM(profit) ASC;
+
+--What's the slowest shipment ever recorded?
 
 SELECT region, concat(ROUND(AVG(discount)*100, 1), '%') AS avg_discount, SUM(profit) AS total_profit
        FROM orders
@@ -55,4 +75,4 @@ GROUP BY region
 ORDER BY avg_discount DESC, total_profit ASC
 Limit 1;
 
---check
+--The End!
